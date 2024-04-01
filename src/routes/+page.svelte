@@ -131,7 +131,7 @@
 		const day = date.getDate();
 		const month = date.getMonth();
 
-		if (month === 2 && day === 31) {
+		if (month === 3 && day === 1) {
 			return true;
 		}
 
