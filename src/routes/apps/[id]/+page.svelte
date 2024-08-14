@@ -41,17 +41,23 @@
 		return template.replace('%s', encodeURIComponent(input));
 	}
 
-	function encodeURL(url: string): string {
+	async function encodeURL(url: string): Promise<string> {
 		if (!browser) {
 			return url;
 		}
-		// check if the service worker is installed
-		navigator.serviceWorker.getRegistrations().then((registrations) => {
-			if (registrations.length === 0) {
-				// Service worker is not installed so register it
-				registerServiceWorker();
-			}
-		});
+
+		// @ts-ignore
+		const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
+		// Set the iframe source to the search query
+		// let wispUrl =
+		// 	(location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
+		let wispUrl = 'ws://localhost:4000/wisp/';
+
+		//@ts-ignore
+		if ((await connection.getTransport()) !== '/epoxy/index.mjs') {
+			//@ts-ignore
+			await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
+		}
 
 		return __uv$config.prefix + __uv$config.encodeUrl(search(url));
 	}
@@ -189,7 +195,7 @@
 	}
 </script>
 
-<svelte:window bind:innerWidth={innerWidth} />
+<svelte:window bind:innerWidth />
 <svelte:head>
 	<title>{config.branding.name} - {data.app.name}</title>
 	<meta property="og:title" content="{config.branding.name} - {data.app.name}" />
@@ -272,13 +278,15 @@
 					{/if}
 					<!-- Proxied app -->
 					{#if data.app.embedURL != null}
-						<iframe
-							class="h-full w-full rounded-t-lg bg-white opacity-0"
-							id="iframe"
-							title={data.app.name}
-							src={encodeURL(data.app.embedURL)}
-							on:load={() => loadedApp()}
-						/>
+						{#await encodeURL(data.game.embedURL) then encodedURL}
+							<iframe
+								class="h-full w-full rounded-t-lg bg-white opacity-0"
+								id="iframe"
+								title={data.game.name}
+								src={encodedURL}
+								on:load={() => loadedApp()}
+							/>
+						{/await}
 					{/if}
 				{/if}
 			</div>

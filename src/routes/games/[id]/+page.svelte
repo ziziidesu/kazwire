@@ -22,6 +22,7 @@
 			return new URL(input).toString();
 		} catch (err) {
 			// input was not a valid URL
+			// console.error(err);
 		}
 
 		try {
@@ -32,53 +33,44 @@
 			if (url.hostname.includes('.')) return url.toString();
 		} catch (err) {
 			// input was not valid URL
+			// console.error(err);
 		}
-
-		// input may have been a valid URL, however the hostname was invalid
 
 		// Attempts to convert the input to a fully qualified URL have failed
 		// Treat the input as a search query
 		return template.replace('%s', encodeURIComponent(input));
 	}
 
-	function encodeURL(url: string): string {
+	async function encodeURL(url: string): Promise<string> {
 		if (!browser) {
 			return url;
 		}
-		// check if the service worker is installed
-		navigator.serviceWorker.getRegistrations().then((registrations) => {
-			if (registrations.length === 0) {
-				// Service worker is not installed so register it
-				registerServiceWorker();
-			}
-		});
+
+		// @ts-ignore
+		const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
+		// Set the iframe source to the search query
+		// let wispUrl =
+		// 	(location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
+		let wispUrl = 'ws://localhost:4000/wisp/';
+
+		//@ts-ignore
+		if ((await connection.getTransport()) !== '/epoxy/index.mjs') {
+			//@ts-ignore
+			await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
+		}
 
 		return __uv$config.prefix + __uv$config.encodeUrl(search(url));
 	}
 
-	function registerServiceWorker() {
-		// Register the service worker
-		if (__uv$config.prefix === undefined) {
-			console.error('Service worker prefix is undefined');
-			// wait 5 seconds and try again
-			setTimeout(registerServiceWorker, 5000);
-		}
-		navigator.serviceWorker.register('/uv.js', { scope: __uv$config.prefix }).then((reg) => {
-			if (reg.installing) {
-				const sw = reg.installing || reg.waiting;
-				sw.onstatechange = function () {
-					if (sw.state === 'installed') {
-						// SW installed.  Refresh page so SW can respond with SW-enabled page.
-						window.location.reload();
-					}
-				};
-			}
-		});
-	}
-
 	let canShare: boolean = false;
-	onMount(() => {
-		registerServiceWorker();
+	onMount(async () => {
+		try {
+			console.log('Registering service worker');
+			// @ts-ignore
+			await registerSW();
+		} catch (err) {
+			console.error('Failed to register the service worker:', err);
+		}
 
 		// Check if the browser supports the share API
 		if (navigator.canShare({ url: window.location.href })) {
@@ -189,7 +181,7 @@
 	}
 </script>
 
-<svelte:window bind:innerWidth={innerWidth} />
+<svelte:window bind:innerWidth />
 <svelte:head>
 	<title>{config.branding.name} - {data.game.name}</title>
 	<meta property="og:title" content="{config.branding.name} - {data.game.name}" />
@@ -301,13 +293,15 @@
 						/>
 						<!-- Proxied game -->
 					{:else if data.game.embedURL != null}
-						<iframe
-							class="h-full w-full rounded-t-lg bg-white opacity-0"
-							id="iframe"
-							title={data.game.name}
-							src={encodeURL(data.game.embedURL)}
-							on:load={() => loadedGame()}
-						/>
+						{#await encodeURL(data.game.embedURL) then encodedURL}
+							<iframe
+								class="h-full w-full rounded-t-lg bg-white opacity-0"
+								id="iframe"
+								title={data.game.name}
+								src={encodedURL}
+								on:load={() => loadedGame()}
+							/>
+						{/await}
 					{/if}
 				{/if}
 			</div>

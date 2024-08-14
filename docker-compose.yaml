@@ -5,9 +5,9 @@ version: '3.1'
 services:
   postgres:
     image: postgres:13
-    container_name: postgres
+    container_name: kazwire-postgres
     ports:
-      - "6500:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
