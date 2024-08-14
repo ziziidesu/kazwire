@@ -265,11 +265,11 @@
 					{/if}
 					<!-- Proxied app -->
 					{#if data.app.embedURL != null}
-						{#await encodeURL(data.game.embedURL) then encodedURL}
+						{#await encodeURL(data.app.embedURL) then encodedURL}
 							<iframe
 								class="h-full w-full rounded-t-lg bg-white opacity-0"
 								id="iframe"
-								title={data.game.name}
+								title={data.app.name}
 								src={encodedURL}
 								on:load={() => loadedApp()}
 							/>
