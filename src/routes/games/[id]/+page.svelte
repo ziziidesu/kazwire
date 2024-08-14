@@ -66,8 +66,15 @@
 	onMount(async () => {
 		try {
 			console.log('Registering service worker');
-			// @ts-ignore
-			await registerSW();
+			
+			let interval = setInterval(async () => {
+				// @ts-ignore
+				if (window.registerSW) {
+					// @ts-ignore
+					await registerSW();
+					clearInterval(interval);
+				}
+			}, 500);
 		} catch (err) {
 			console.error('Failed to register the service worker:', err);
 		}
