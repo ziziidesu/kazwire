@@ -43,15 +43,16 @@
 		// Register the service worker
 		try {
 			console.log('Registering service worker');
-			// @ts-ignore
-			if (!navigator.serviceWorker) {
-				if (location.protocol !== 'https:' && !swAllowedHostnames.includes(location.hostname))
-					throw new Error('Service workers cannot be registered without https.');
+			// wait until everything is loaded before registering the service worker
 
-				throw new Error("Your browser doesn't support service workers.");
-			}
-
-			await navigator.serviceWorker.register(stockSW);
+			let interval = setInterval(async () => {
+				// @ts-ignore
+				if (window.registerSW) {
+					// @ts-ignore
+					await registerSW();
+					clearInterval(interval);
+				}
+			}, 500);
 		} catch (err) {
 			console.error('Failed to register the service worker:', err);
 		}
