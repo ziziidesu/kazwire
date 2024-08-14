@@ -29,5 +29,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	// Service-Worker-Allowed HTTP header for service workers
+	await event.setHeaders({
+		'Service-Worker-Allowed': '/'
+	});
+
+
 	return await resolve(event);
 };
