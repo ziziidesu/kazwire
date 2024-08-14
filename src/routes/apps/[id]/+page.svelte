@@ -49,9 +49,9 @@
 		// @ts-ignore
 		const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
 		// Set the iframe source to the search query
-		// let wispUrl =
-		// 	(location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
-		let wispUrl = 'ws://localhost:4000/wisp/';
+		let wispUrl =
+			(location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
+		// let wispUrl = 'ws://localhost:4000/wisp/';
 
 		//@ts-ignore
 		if ((await connection.getTransport()) !== '/epoxy/index.mjs') {
