@@ -47,9 +47,9 @@
 
 			let interval = setInterval(async () => {
 				// @ts-ignore
-				if (navigator) {
+				if (navigator && __uv$config.prefix) {
 					//@ts-ignore
-					navigator.serviceWorker.register('/uv.js', { scope: "/service/" }).then((reg) => {
+					navigator.serviceWorker.register('/uv.js', { scope: __uv$config.prefix }).then((reg) => {
 						if (reg.installing) {
 							const sw = reg.installing || reg.waiting;
 							sw.onstatechange = function () {
