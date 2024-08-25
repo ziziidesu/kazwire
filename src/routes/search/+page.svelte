@@ -78,11 +78,18 @@
 	});
 
 	async function iframeSearch() {
-		// Get the iframe
-		let iframe: HTMLIFrameElement = document.getElementById('iframe') as HTMLIFrameElement;
+		let interval = setInterval(async () => {
+			// @ts-ignore
+			if (__uv$config.prefix) {
+				// Get the iframe
+				let iframe: HTMLIFrameElement = document.getElementById('iframe') as HTMLIFrameElement;
 
-		// Set the iframe source to the search query
-		iframe.src = __uv$config.prefix + __uv$config.encodeUrl(search(searchQuery));
+				// Set the iframe source to the search query
+				iframe.src = __uv$config.prefix + __uv$config.encodeUrl(search(searchQuery));
+
+				clearInterval(interval);
+			}
+		}, 500);
 	}
 
 	// Fullscreen the iframe

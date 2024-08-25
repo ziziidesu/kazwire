@@ -56,29 +56,27 @@
 		return __uv$config.prefix + __uv$config.encodeUrl(search(url));
 	}
 
-	function registerServiceWorker() {
-		// Register the service worker
-		if (__uv$config.prefix === undefined) {
-			console.error('Service worker prefix is undefined');
-			// wait 5 seconds and try again
-			setTimeout(registerServiceWorker, 5000);
-		}
-		navigator.serviceWorker.register('/uv.js', { scope: __uv$config.prefix }).then((reg) => {
-			if (reg.installing) {
-				const sw = reg.installing || reg.waiting;
-				sw.onstatechange = function () {
-					if (sw.state === 'installed') {
-						// SW installed.  Refresh page so SW can respond with SW-enabled page.
-						window.location.reload();
-					}
-				};
-			}
-		});
-	}
-
 	let canShare: boolean = false;
 	onMount(() => {
-		registerServiceWorker();
+		let interval = setInterval(async () => {
+			// @ts-ignore
+			if (navigator && __uv$config.prefix) {
+				//@ts-ignore
+				navigator.serviceWorker.register('/uv.js', { scope: __uv$config.prefix }).then((reg) => {
+					if (reg.installing) {
+						const sw = reg.installing || reg.waiting;
+						sw.onstatechange = function () {
+							if (sw.state === 'installed') {
+								// SW installed.  Refresh page so SW can respond with SW-enabled page.
+								window.location.reload();
+							}
+						};
+					}
+				});
+
+				clearInterval(interval);
+			}
+		}, 500);
 
 		// Check if the browser supports the share API
 		if (navigator.canShare({ url: window.location.href })) {
@@ -189,7 +187,7 @@
 	}
 </script>
 
-<svelte:window bind:innerWidth={innerWidth} />
+<svelte:window bind:innerWidth />
 <svelte:head>
 	<title>{config.branding.name} - {data.game.name}</title>
 	<meta property="og:title" content="{config.branding.name} - {data.game.name}" />
