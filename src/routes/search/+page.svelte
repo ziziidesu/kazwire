@@ -41,17 +41,32 @@
 
 	onMount(async () => {
 		// Register the service worker
-		navigator.serviceWorker.register('/uv.js', { scope: __uv$config.prefix }).then((reg) => {
-			if (reg.installing) {
-				const sw = reg.installing || reg.waiting;
-				sw.onstatechange = function () {
-					if (sw.state === 'installed') {
-						// SW installed.  Refresh page so SW can respond with SW-enabled page.
-						window.location.reload();
-					}
-				};
-			}
-		});
+		try {
+			console.log('Registering service worker');
+			// wait until everything is loaded before registering the service worker
+
+			let interval = setInterval(async () => {
+				// @ts-ignore
+				if (navigator) {
+					//@ts-ignore
+					navigator.serviceWorker.register('/uv.js', { scope: "/service/" }).then((reg) => {
+						if (reg.installing) {
+							const sw = reg.installing || reg.waiting;
+							sw.onstatechange = function () {
+								if (sw.state === 'installed') {
+									// SW installed.  Refresh page so SW can respond with SW-enabled page.
+									window.location.reload();
+								}
+							};
+						}
+					});
+
+					clearInterval(interval);
+				}
+			}, 500);
+		} catch (err) {
+			console.error('Failed to register the service worker:', err);
+		}
 
 		// get the search query from the url
 		const urlParams = new URLSearchParams(window.location.search);
