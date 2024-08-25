@@ -1,12 +1,13 @@
 // This file overwrites the stock UV config.js
 
 self.__uv$config = {
+    bare: "https://kazwire.com/bare/",
     prefix: "/service/",
     encodeUrl: Ultraviolet.codec.xor.encode,
     decodeUrl: Ultraviolet.codec.xor.decode,
-    handler: "/uv/uv.handler.js",
-    client: "/uv/uv.client.js",
-    bundle: "/uv/uv.bundle.js",
-    config: "/uv/uv.config.js",
-    sw: "/uv/uv.sw.js",
+    handler: "/uv/uv.handler.js?v=8-25-24",
+    client: "/uv/uv.client.js?v=8-25-24",
+    bundle: "/uv/uv.bundle.js?v=8-25-24",
+    config: "/uv/uv.config.js?v=8-25-24",
+    sw: "/uv/uv.sw.js?v=8-25-24",
 };

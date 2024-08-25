@@ -41,21 +41,17 @@
 
 	onMount(async () => {
 		// Register the service worker
-		try {
-			console.log('Registering service worker');
-			// wait until everything is loaded before registering the service worker
-
-			let interval = setInterval(async () => {
-				// @ts-ignore
-				if (window.registerSW) {
-					// @ts-ignore
-					await registerSW();
-					clearInterval(interval);
-				}
-			}, 500);
-		} catch (err) {
-			console.error('Failed to register the service worker:', err);
-		}
+		navigator.serviceWorker.register('/uv.js', { scope: __uv$config.prefix }).then((reg) => {
+			if (reg.installing) {
+				const sw = reg.installing || reg.waiting;
+				sw.onstatechange = function () {
+					if (sw.state === 'installed') {
+						// SW installed.  Refresh page so SW can respond with SW-enabled page.
+						window.location.reload();
+					}
+				};
+			}
+		});
 
 		// get the search query from the url
 		const urlParams = new URLSearchParams(window.location.search);
@@ -67,22 +63,10 @@
 	});
 
 	async function iframeSearch() {
-		// @ts-ignore
-		const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
 		// Get the iframe
 		let iframe: HTMLIFrameElement = document.getElementById('iframe') as HTMLIFrameElement;
 
 		// Set the iframe source to the search query
-		let wispUrl =
-			(location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
-		// let wispUrl = 'ws://localhost:4000/wisp/';
-
-		//@ts-ignore
-		if ((await connection.getTransport()) !== '/epoxy/index.mjs') {
-			//@ts-ignore
-			await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
-		}
-		//@ts-ignore
 		iframe.src = __uv$config.prefix + __uv$config.encodeUrl(search(searchQuery));
 	}
 

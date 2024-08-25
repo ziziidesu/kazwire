@@ -41,37 +41,44 @@
 		return template.replace('%s', encodeURIComponent(input));
 	}
 
-	async function encodeURL(url: string): Promise<string> {
+	function encodeURL(url: string): string {
 		if (!browser) {
 			return url;
 		}
-
-		// @ts-ignore
-		const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
-		// Set the iframe source to the search query
-		let wispUrl =
-			(location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
-		// let wispUrl = 'ws://localhost:4000/wisp/';
-
-		//@ts-ignore
-		if ((await connection.getTransport()) !== '/epoxy/index.mjs') {
-			//@ts-ignore
-			await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
-		}
+		// check if the service worker is installed
+		navigator.serviceWorker.getRegistrations().then((registrations) => {
+			if (registrations.length === 0) {
+				// Service worker is not installed so register it
+				registerServiceWorker();
+			}
+		});
 
 		return __uv$config.prefix + __uv$config.encodeUrl(search(url));
 	}
 
+	function registerServiceWorker() {
+		// Register the service worker
+		if (__uv$config.prefix === undefined) {
+			console.error('Service worker prefix is undefined');
+			// wait 5 seconds and try again
+			setTimeout(registerServiceWorker, 5000);
+		}
+		navigator.serviceWorker.register('/uv.js', { scope: __uv$config.prefix }).then((reg) => {
+			if (reg.installing) {
+				const sw = reg.installing || reg.waiting;
+				sw.onstatechange = function () {
+					if (sw.state === 'installed') {
+						// SW installed.  Refresh page so SW can respond with SW-enabled page.
+						window.location.reload();
+					}
+				};
+			}
+		});
+	}
+
 	let canShare: boolean = false;
 	onMount(() => {
-		let interval = setInterval(async () => {
-			// @ts-ignore
-			if (window.registerSW) {
-				// @ts-ignore
-				await registerSW();
-				clearInterval(interval);
-			}
-		}, 500);
+		registerServiceWorker();
 
 		// Check if the browser supports the share API
 		if (navigator.canShare({ url: window.location.href })) {
@@ -265,15 +272,13 @@
 					{/if}
 					<!-- Proxied app -->
 					{#if data.app.embedURL != null}
-						{#await encodeURL(data.app.embedURL) then encodedURL}
-							<iframe
-								class="h-full w-full rounded-t-lg bg-white opacity-0"
-								id="iframe"
-								title={data.app.name}
-								src={encodedURL}
-								on:load={() => loadedApp()}
-							/>
-						{/await}
+						<iframe
+							class="h-full w-full rounded-t-lg bg-white opacity-0"
+							id="iframe"
+							title={data.app.name}
+							src={encodeURL(data.app.embedURL)}
+							on:load={() => loadedApp()}
+						/>
 					{/if}
 				{/if}
 			</div>
